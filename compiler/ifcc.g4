@@ -31,3 +31,4 @@ VAR    : [a-zA-Z_] [a-zA-Z0-9_]* ;
 COMMENT   : '/*' .*? '*/' -> skip ;
 DIRECTIVE : '#' (~'\n')* '\n' -> skip ;
 WS        : [ \t\r\n]+ -> channel(HIDDEN);
+LINE_COMMENT  : '//' ~[\r\n]* -> skip ;
