@@ -35,11 +35,23 @@ public:
     return visitChildren(ctx);
   }
 
+  virtual std::any visitBitwiseAndExpr(ifccParser::BitwiseAndExprContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
   virtual std::any visitConstExpr(ifccParser::ConstExprContext *ctx) override {
     return visitChildren(ctx);
   }
 
   virtual std::any visitArrayExpr(ifccParser::ArrayExprContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
+  virtual std::any visitEqualityExpr(ifccParser::EqualityExprContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
+  virtual std::any visitBitwiseOrExpr(ifccParser::BitwiseOrExprContext *ctx) override {
     return visitChildren(ctx);
   }
 
@@ -56,6 +68,18 @@ public:
   }
 
   virtual std::any visitAddExpr(ifccParser::AddExprContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
+  virtual std::any visitRelationalExpr(ifccParser::RelationalExprContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
+  virtual std::any visitBitwiseXorExpr(ifccParser::BitwiseXorExprContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
+  virtual std::any visitShiftExpr(ifccParser::ShiftExprContext *ctx) override {
     return visitChildren(ctx);
   }
 

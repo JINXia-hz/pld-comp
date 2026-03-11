@@ -124,3 +124,83 @@ antlrcpp::Any CodeGenVisitor::visitDeclaration(ifccParser::DeclarationContext *c
 {
     return 0;
 }
+
+antlrcpp::Any CodeGenVisitor::visitRelationalExpr(ifccParser::RelationalExprContext *ctx) {
+    this->visit(ctx->expr(0));
+    std::cout << "    pushq %rax\n";
+    this->visit(ctx->expr(1));
+    std::cout << "    movl %eax, %ecx\n";
+    std::cout << "    popq %rax\n";
+
+    std::cout << "    cmpl %ecx, %eax\n";
+
+    std::string op = ctx->OR->getText();
+    if (op == "<")  std::cout << "    setl %al\n";
+    else if (op == ">")  std::cout << "    setg %al\n";
+    else if (op == "<=") std::cout << "    setle %al\n";
+    else if (op == ">=") std::cout << "    setge %al\n";
+
+    std::cout << "    movzbl %al, %eax\n";
+    return 0;
+}
+
+antlrcpp::Any CodeGenVisitor::visitEqualityExpr(ifccParser::EqualityExprContext *ctx) {
+    this->visit(ctx->expr(0));
+    std::cout << "    pushq %rax\n";
+    this->visit(ctx->expr(1));
+    std::cout << "    movl %eax, %ecx\n";
+    std::cout << "    popq %rax\n";
+
+    std::cout << "    cmpl %ecx, %eax\n";
+
+    std::string op = ctx->OE->getText();
+    if (op == "==") std::cout << "    sete %al\n";
+    else if (op == "!=") std::cout << "    setne %al\n";
+
+    std::cout << "    movzbl %al, %eax\n";
+    return 0;
+}
+
+antlrcpp::Any CodeGenVisitor::visitBitwiseAndExpr(ifccParser::BitwiseAndExprContext *ctx) {
+    this->visit(ctx->expr(0));
+    std::cout << "    pushq %rax\n";
+    this->visit(ctx->expr(1));
+    std::cout << "    movl %eax, %ecx\n";
+    std::cout << "    popq %rax\n";
+    std::cout << "    andl %ecx, %eax\n";
+    return 0;
+}
+
+antlrcpp::Any CodeGenVisitor::visitBitwiseOrExpr(ifccParser::BitwiseOrExprContext *ctx) {
+    this->visit(ctx->expr(0));
+    std::cout << "    pushq %rax\n";
+    this->visit(ctx->expr(1));
+    std::cout << "    movl %eax, %ecx\n";
+    std::cout << "    popq %rax\n";
+    std::cout << "    orl %ecx, %eax\n";
+    return 0;
+}
+
+antlrcpp::Any CodeGenVisitor::visitBitwiseXorExpr(ifccParser::BitwiseXorExprContext *ctx) {
+    this->visit(ctx->expr(0));
+    std::cout << "    pushq %rax\n";
+    this->visit(ctx->expr(1));
+    std::cout << "    movl %eax, %ecx\n";
+    std::cout << "    popq %rax\n";
+    std::cout << "    xorl %ecx, %eax\n";
+    return 0;
+}
+
+antlrcpp::Any CodeGenVisitor::visitShiftExpr(ifccParser::ShiftExprContext *ctx) {
+    this->visit(ctx->expr(0));
+    std::cout << "    pushq %rax\n";
+    this->visit(ctx->expr(1));
+    std::cout << "    movl %eax, %ecx\n";
+    std::cout << "    popq %rax\n";
+
+    std::string op = ctx->OS->getText();
+    if (op == "<<") std::cout << "    sall %cl, %eax\n";
+    else if (op == ">>") std::cout << "    sar %cl, %eax\n";
+
+    return 0;
+}

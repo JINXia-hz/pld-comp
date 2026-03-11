@@ -14,7 +14,9 @@ public:
   enum {
     T__0 = 1, T__1 = 2, T__2 = 3, T__3 = 4, T__4 = 5, T__5 = 6, T__6 = 7, 
     T__7 = 8, T__8 = 9, T__9 = 10, T__10 = 11, T__11 = 12, T__12 = 13, T__13 = 14, 
-    RETURN = 15, CONST = 16, VAR = 17, COMMENT = 18, DIRECTIVE = 19, WS = 20
+    T__14 = 15, T__15 = 16, T__16 = 17, T__17 = 18, T__18 = 19, T__19 = 20, 
+    T__20 = 21, T__21 = 22, T__22 = 23, T__23 = 24, T__24 = 25, RETURN = 26, 
+    CONST = 27, VAR = 28, COMMENT = 29, DIRECTIVE = 30, WS = 31
   };
 
   enum {
@@ -128,6 +130,16 @@ public:
    
   };
 
+  class  BitwiseAndExprContext : public ExprContext {
+  public:
+    BitwiseAndExprContext(ExprContext *ctx);
+
+    std::vector<ExprContext *> expr();
+    ExprContext* expr(size_t i);
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+  };
+
   class  ConstExprContext : public ExprContext {
   public:
     ConstExprContext(ExprContext *ctx);
@@ -143,6 +155,27 @@ public:
 
     antlr4::tree::TerminalNode *VAR();
     antlr4::tree::TerminalNode *CONST();
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+  };
+
+  class  EqualityExprContext : public ExprContext {
+  public:
+    EqualityExprContext(ExprContext *ctx);
+
+    antlr4::Token *OE = nullptr;
+    std::vector<ExprContext *> expr();
+    ExprContext* expr(size_t i);
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+  };
+
+  class  BitwiseOrExprContext : public ExprContext {
+  public:
+    BitwiseOrExprContext(ExprContext *ctx);
+
+    std::vector<ExprContext *> expr();
+    ExprContext* expr(size_t i);
 
     virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
   };
@@ -181,6 +214,38 @@ public:
     AddExprContext(ExprContext *ctx);
 
     antlr4::Token *OA = nullptr;
+    std::vector<ExprContext *> expr();
+    ExprContext* expr(size_t i);
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+  };
+
+  class  RelationalExprContext : public ExprContext {
+  public:
+    RelationalExprContext(ExprContext *ctx);
+
+    antlr4::Token *OR = nullptr;
+    std::vector<ExprContext *> expr();
+    ExprContext* expr(size_t i);
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+  };
+
+  class  BitwiseXorExprContext : public ExprContext {
+  public:
+    BitwiseXorExprContext(ExprContext *ctx);
+
+    std::vector<ExprContext *> expr();
+    ExprContext* expr(size_t i);
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+  };
+
+  class  ShiftExprContext : public ExprContext {
+  public:
+    ShiftExprContext(ExprContext *ctx);
+
+    antlr4::Token *OS = nullptr;
     std::vector<ExprContext *> expr();
     ExprContext* expr(size_t i);
 

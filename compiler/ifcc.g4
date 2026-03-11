@@ -10,15 +10,19 @@ statement
     | VAR '=' expr ';'    # Assignment
     ;
 
-expr 
-    : '(' expr ')'              # ParExpr      
-    | CONST                     # ConstExpr    
-    | VAR                       # VarExpr      
-    | VAR '[' CONST ']'         # ArrayExpr    
-    | expr (OM=('*'|'/')) expr  # MultExpr     
-    | expr (OA=('+'|'-')) expr  # AddExpr      
-    ;
-
+expr : '(' expr ')'                         # ParExpr
+     | expr OM=('*'|'/') expr               # MultExpr
+     | expr OA=('+'|'-') expr               # AddExpr
+     | expr OS=('<<'|'>>') expr             # ShiftExpr
+     | expr OR=('<'|'>'|'<='|'>=') expr     # RelationalExpr
+     | expr OE=('=='|'!=') expr             # EqualityExpr
+     | expr '&' expr                        # BitwiseAndExpr
+     | expr '^' expr                        # BitwiseXorExpr
+     | expr '|' expr                        # BitwiseOrExpr
+     | VAR                                  # VarExpr
+     | CONST                                # ConstExpr
+     | VAR '[' CONST ']'                    # ArrayExpr 
+     ;
 
 RETURN : 'return' ;
 CONST  : [0-9]+ ;
