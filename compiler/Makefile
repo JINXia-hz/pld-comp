@@ -31,7 +31,6 @@ build/%.o: generated/%.cpp
 -include build/*.d
 
 ##########################################
-# 生成逻辑：删除了所有的 sed 补丁，因为版本对齐后不需要了！
 generated/ifccParser.cpp: ifcc.g4
 	@mkdir -p generated
 	java -jar $(ANTLRJAR) -visitor -no-listener -Dlanguage=Cpp -o generated ifcc.g4

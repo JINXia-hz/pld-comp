@@ -8,11 +8,22 @@ antlrcpp::Any CodeGenVisitor::visitProg(ifccParser::ProgContext *ctx)
     std::cout << "    pushq %rbp\n";
     std::cout << "    movq %rsp, %rbp\n";
 
+    int numVariables = symbolTable.size();
+    if (numVariables > 0) {
+        int stackSize = numVariables * 4;
+
+        int alignedStackSize = (stackSize + 15) & ~15; 
+        
+        std::cout << "    subq $" << alignedStackSize << ", %rsp\n";
+    }
+
     for (auto stmt : ctx->statement()) {
         this->visit(stmt); 
     }
 
     std::cout << "end_main:\n"; 
+    std::cout << "    movq %rbp, %rsp\n"; 
+    
     std::cout << "    popq %rbp\n";
     std::cout << "    ret\n";
 
