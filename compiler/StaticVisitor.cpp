@@ -16,7 +16,7 @@ antlrcpp::Any StaticVisitor::visitDeclaration(ifccParser::DeclarationContext *ct
 }
 
 antlrcpp::Any StaticVisitor::visitVarExpr(ifccParser::VarExprContext *ctx) {
-    std::string varName = ctx->VAR()->getText(); [cite: 695]
+    std::string varName = ctx->VAR()->getText();
 
     if (symbolTable.find(varName) == symbolTable.end()) {
         std::cerr << "Error: variable " << varName << " used but not declared." << std::endl;

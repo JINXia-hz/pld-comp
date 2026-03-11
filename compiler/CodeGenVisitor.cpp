@@ -29,7 +29,7 @@ antlrcpp::Any CodeGenVisitor::visitAssignment(ifccParser::AssignmentContext *ctx
     return 0;
 }
 
-antlrcpp::Any CodeGenVisitor::visitReturnStmt(ifccParser::ReturnstmtContext *ctx)
+antlrcpp::Any CodeGenVisitor::visitReturnStmt(ifccParser::ReturnStmtContext *ctx)
 {
     this->visit(ctx->expr()); 
     std::cout << "    jmp end_main\n";
@@ -51,7 +51,7 @@ antlrcpp::Any CodeGenVisitor::visitAddExpr(ifccParser::AddExprContext *ctx)
 
     std::cout << "    popq %rdx\n"; 
 
-    if (ctx->OA()->getText() == "-") {
+    if (ctx->OA->getText() == "-") {
         std::cout << "    negl %eax\n";
     }
     std::cout << "    addl %edx, %eax\n";
@@ -68,7 +68,7 @@ antlrcpp::Any CodeGenVisitor::visitMultExpr(ifccParser::MultExprContext *ctx)
     
     std::cout << "    popq %rax\n";
 
-    if (ctx->OM()->getText() == "*") {
+    if (ctx->OM->getText() == "*") {
         std::cout << "    imull %ecx, %eax\n"; 
     } else {
         std::cout << "    cltd\n";
@@ -103,5 +103,10 @@ antlrcpp::Any CodeGenVisitor::visitArrayExpr(ifccParser::ArrayExprContext *ctx) 
     int elementPosition = basePosition - (index * 4);
 
     std::cout << "    movl " << elementPosition << "(%rbp), %eax" << std::endl;
+    return 0;
+}
+
+antlrcpp::Any CodeGenVisitor::visitDeclaration(ifccParser::DeclarationContext *ctx)
+{
     return 0;
 }

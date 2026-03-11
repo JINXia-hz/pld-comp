@@ -1,4 +1,5 @@
-include config.mk
+# 关键修改：包含专门为 WSL 2025 准备的配置文件
+include config-wsl-2025.mk
 
 CC=g++
 CCFLAGS=-g -c -std=c++17 -I$(ANTLRINC) -Igenerated/ -Wno-attributes 
@@ -7,7 +8,6 @@ LDFLAGS=-g
 default: all
 all: ifcc
 
-# 确保编译所有必要的组件 [cite: 13]
 OBJECTS=build/ifccBaseVisitor.o \
 	build/ifccLexer.o \
 	build/ifccVisitor.o \
@@ -31,16 +31,10 @@ build/%.o: generated/%.cpp
 -include build/*.d
 
 ##########################################
-# 生成逻辑：增加了对 Windows 换行符的清理和全量 override 移除
+# 生成逻辑：删除了所有的 sed 补丁，因为版本对齐后不需要了！
 generated/ifccParser.cpp: ifcc.g4
 	@mkdir -p generated
 	java -jar $(ANTLRJAR) -visitor -no-listener -Dlanguage=Cpp -o generated ifcc.g4
-	@echo "--- 正在深度清理兼容性问题 ---"
-	# 1. 移除可能的 Windows 换行符 \r，防止匹配失败
-	find generated -name "*.h" -exec sed -i 's/\r//g' {} +
-	# 2. 移除所有的 override 关键字（核武级方案）
-	find generated -name "*.h" -exec sed -i 's/override//g' {} +
-	@echo "--- 修复完成 ---"
 
 generated/ifccLexer.cpp: generated/ifccParser.cpp
 generated/ifccVisitor.cpp: generated/ifccParser.cpp

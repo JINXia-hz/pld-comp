@@ -1,5 +1,5 @@
 
-// Generated from ifcc.g4 by ANTLR 4.13.1
+// Generated from ifcc.g4 by ANTLR 4.13.2
 
 
 #include "ifccLexer.h"
@@ -45,7 +45,7 @@ struct IfccLexerStaticData final {
 #if ANTLR4_USE_THREAD_LOCAL_CACHE
 static thread_local
 #endif
-IfccLexerStaticData *ifcclexerLexerStaticData = nullptr;
+std::unique_ptr<IfccLexerStaticData> ifcclexerLexerStaticData = nullptr;
 
 void ifcclexerLexerInitialize() {
 #if ANTLR4_USE_THREAD_LOCAL_CACHE
@@ -128,7 +128,7 @@ void ifcclexerLexerInitialize() {
   for (size_t i = 0; i < count; i++) { 
     staticData->decisionToDFA.emplace_back(staticData->atn->getDecisionState(i), i);
   }
-  ifcclexerLexerStaticData = staticData.release();
+  ifcclexerLexerStaticData = std::move(staticData);
 }
 
 }

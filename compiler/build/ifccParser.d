@@ -1,5 +1,4 @@
-build/ifccBaseVisitor.o: generated/ifccBaseVisitor.cpp \
- generated/ifccBaseVisitor.h \
+build/ifccParser.o: generated/ifccParser.cpp generated/ifccVisitor.h \
  /usr/local/include/antlr4-runtime/antlr4-runtime.h \
  /usr/local/include/antlr4-runtime/antlr4-common.h \
  /usr/local/include/antlr4-runtime/support/Declarations.h \
@@ -166,4 +165,4 @@ build/ifccBaseVisitor.o: generated/ifccBaseVisitor.cpp \
  /usr/local/include/antlr4-runtime/tree/xpath/XPathTokenElement.h \
  /usr/local/include/antlr4-runtime/tree/xpath/XPathWildcardAnywhereElement.h \
  /usr/local/include/antlr4-runtime/tree/xpath/XPathWildcardElement.h \
- generated/ifccVisitor.h generated/ifccParser.h
+ generated/ifccParser.h

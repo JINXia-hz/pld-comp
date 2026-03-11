@@ -1,5 +1,5 @@
 
-// Generated from ifcc.g4 by ANTLR 4.13.1
+// Generated from ifcc.g4 by ANTLR 4.13.2
 
 #pragma once
 
@@ -15,47 +15,47 @@
 class  ifccBaseVisitor : public ifccVisitor {
 public:
 
-  virtual std::any visitAxiom(ifccParser::AxiomContext *ctx)  {
+  virtual std::any visitAxiom(ifccParser::AxiomContext *ctx) override {
     return visitChildren(ctx);
   }
 
-  virtual std::any visitProg(ifccParser::ProgContext *ctx)  {
+  virtual std::any visitProg(ifccParser::ProgContext *ctx) override {
     return visitChildren(ctx);
   }
 
-  virtual std::any visitReturnStmt(ifccParser::ReturnStmtContext *ctx)  {
+  virtual std::any visitReturnStmt(ifccParser::ReturnStmtContext *ctx) override {
     return visitChildren(ctx);
   }
 
-  virtual std::any visitDeclaration(ifccParser::DeclarationContext *ctx)  {
+  virtual std::any visitDeclaration(ifccParser::DeclarationContext *ctx) override {
     return visitChildren(ctx);
   }
 
-  virtual std::any visitAssignment(ifccParser::AssignmentContext *ctx)  {
+  virtual std::any visitAssignment(ifccParser::AssignmentContext *ctx) override {
     return visitChildren(ctx);
   }
 
-  virtual std::any visitConstExpr(ifccParser::ConstExprContext *ctx)  {
+  virtual std::any visitConstExpr(ifccParser::ConstExprContext *ctx) override {
     return visitChildren(ctx);
   }
 
-  virtual std::any visitArrayExpr(ifccParser::ArrayExprContext *ctx)  {
+  virtual std::any visitArrayExpr(ifccParser::ArrayExprContext *ctx) override {
     return visitChildren(ctx);
   }
 
-  virtual std::any visitParExpr(ifccParser::ParExprContext *ctx)  {
+  virtual std::any visitParExpr(ifccParser::ParExprContext *ctx) override {
     return visitChildren(ctx);
   }
 
-  virtual std::any visitMultExpr(ifccParser::MultExprContext *ctx)  {
+  virtual std::any visitMultExpr(ifccParser::MultExprContext *ctx) override {
     return visitChildren(ctx);
   }
 
-  virtual std::any visitVarExpr(ifccParser::VarExprContext *ctx)  {
+  virtual std::any visitVarExpr(ifccParser::VarExprContext *ctx) override {
     return visitChildren(ctx);
   }
 
-  virtual std::any visitAddExpr(ifccParser::AddExprContext *ctx)  {
+  virtual std::any visitAddExpr(ifccParser::AddExprContext *ctx) override {
     return visitChildren(ctx);
   }
 
