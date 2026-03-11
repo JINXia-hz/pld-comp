@@ -2,6 +2,9 @@
 
 antlrcpp::Any CodeGenVisitor::visitProg(ifccParser::ProgContext *ctx) 
 {
+    std::cout << ".globl main\n";
+    std::cout << "main:\n"; 
+    
     std::cout << "    pushq %rbp\n";
     std::cout << "    movq %rsp, %rbp\n";
 
