@@ -12,6 +12,8 @@ public:
     virtual antlrcpp::Any visitAssignment(ifccParser::AssignmentContext *ctx) override;
     virtual antlrcpp::Any visitArrayExpr(ifccParser::ArrayExprContext *ctx) override;
     std::map<std::string, int> getSymbolTable() { return symbolTable; }
+    virtual antlrcpp::Any visitIfStmt(ifccParser::IfStmtContext *ctx) override;
+    virtual antlrcpp::Any visitBlocStmt(ifccParser::BlocStmtContext *ctx) override;
 
 protected:
     std::map<std::string, int> symbolTable;

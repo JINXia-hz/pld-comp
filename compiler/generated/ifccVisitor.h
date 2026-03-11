@@ -29,6 +29,10 @@ public:
 
     virtual std::any visitAssignment(ifccParser::AssignmentContext *context) = 0;
 
+    virtual std::any visitIfStmt(ifccParser::IfStmtContext *context) = 0;
+
+    virtual std::any visitBlocStmt(ifccParser::BlocStmtContext *context) = 0;
+
     virtual std::any visitBitwiseAndExpr(ifccParser::BitwiseAndExprContext *context) = 0;
 
     virtual std::any visitConstExpr(ifccParser::ConstExprContext *context) = 0;

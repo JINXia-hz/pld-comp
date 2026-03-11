@@ -204,3 +204,37 @@ antlrcpp::Any CodeGenVisitor::visitShiftExpr(ifccParser::ShiftExprContext *ctx) 
 
     return 0;
 }
+
+antlrcpp::Any CodeGenVisitor::visitBlocStmt(ifccParser::BlocStmtContext *ctx) {
+    for (auto stmt : ctx->statements) {
+        this->visit(stmt);
+    }
+    return 0;
+}
+
+antlrcpp::Any CodeGenVisitor::visitIfStmt(ifccParser::IfStmtContext *ctx) {
+    int id = labelCounter++; 
+    std::string elseLabel = "else_" + std::to_string(id);
+    std::string endLabel = "end_if_" + std::to_string(id);
+
+    this->visit(ctx->expr());
+    
+    std::cout << "    cmpl $0, %eax\n";
+    
+    if (ctx->elseStmt) {
+        std::cout << "    je " << elseLabel << "\n";
+    } else {
+        std::cout << "    je " << endLabel << "\n";
+    }
+
+    this->visit(ctx->thenStmt);
+    std::cout << "    jmp " << endLabel << "\n";
+
+    if (ctx->elseStmt) {
+        std::cout << elseLabel << ":\n";
+        this->visit(ctx->elseStmt);
+    }
+
+    std::cout << endLabel << ":\n";
+    return 0;
+}

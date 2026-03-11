@@ -5,9 +5,12 @@ axiom : prog EOF ;
 prog : 'int' 'main' '(' ')' '{' statement* '}' ;
 
 statement 
-    : RETURN expr ';'     # ReturnStmt
-    | 'int' VAR ';'       # Declaration
-    | VAR '=' expr ';'    # Assignment
+    : 'return' expr ';'                         # ReturnStmt
+    | 'int' VAR ';'                             # Declaration
+    | VAR '=' expr ';'                          # Assignment
+    | 'if' '(' expr ')' thenStmt=statement 
+      ('else' elseStmt=statement)?              # IfStmt
+    | '{' (statements+=statement)* '}'          # BlocStmt
     ;
 
 expr : '(' expr ')'                         # ParExpr

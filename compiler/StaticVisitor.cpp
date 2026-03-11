@@ -43,3 +43,19 @@ antlrcpp::Any StaticVisitor::visitArrayExpr(ifccParser::ArrayExprContext *ctx) {
     }
     return 0;
 }
+
+antlrcpp::Any StaticVisitor::visitIfStmt(ifccParser::IfStmtContext *ctx) {
+    this->visit(ctx->expr());
+    this->visit(ctx->thenStmt);
+    if (ctx->elseStmt) {
+        this->visit(ctx->elseStmt);
+    }
+    return 0;
+}
+
+antlrcpp::Any StaticVisitor::visitBlocStmt(ifccParser::BlocStmtContext *ctx) {
+    for (auto stmt : ctx->statements) {
+        this->visit(stmt);
+    }
+    return 0;
+}

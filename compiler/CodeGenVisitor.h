@@ -24,8 +24,10 @@ class  CodeGenVisitor : public ifccBaseVisitor {
         virtual antlrcpp::Any visitBitwiseXorExpr(ifccParser::BitwiseXorExprContext *ctx) override;
         virtual antlrcpp::Any visitBitwiseOrExpr(ifccParser::BitwiseOrExprContext *ctx) override;
         virtual antlrcpp::Any visitShiftExpr(ifccParser::ShiftExprContext *ctx) override;
-        
+        virtual antlrcpp::Any visitIfStmt(ifccParser::IfStmtContext *ctx) override;
+        virtual antlrcpp::Any visitBlocStmt(ifccParser::BlocStmtContext *ctx) override;
         protected:
         std::map<std::string, int> symbolTable;
+        int labelCounter = 0;
 };
 

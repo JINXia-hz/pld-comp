@@ -35,6 +35,14 @@ public:
     return visitChildren(ctx);
   }
 
+  virtual std::any visitIfStmt(ifccParser::IfStmtContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
+  virtual std::any visitBlocStmt(ifccParser::BlocStmtContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
   virtual std::any visitBitwiseAndExpr(ifccParser::BitwiseAndExprContext *ctx) override {
     return visitChildren(ctx);
   }
