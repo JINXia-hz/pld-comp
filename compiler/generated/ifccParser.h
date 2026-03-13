@@ -88,6 +88,16 @@ public:
    
   };
 
+  class  ArrayDeclarationContext : public StatementContext {
+  public:
+    ArrayDeclarationContext(StatementContext *ctx);
+
+    antlr4::tree::TerminalNode *VAR();
+    ExprContext *expr();
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+  };
+
   class  IfStmtContext : public StatementContext {
   public:
     IfStmtContext(StatementContext *ctx);

@@ -115,3 +115,18 @@ antlrcpp::Any StaticVisitor::visitArrayExpr(ifccParser::ArrayExprContext *ctx) {
 
     return this->visit(ctx->expr()); 
 }
+
+antlrcpp::Any StaticVisitor::visitArrayDeclaration(ifccParser::ArrayDeclarationContext *ctx) {
+    std::string varName = ctx->VAR()->getText();
+
+    if (scopeStack.back().find(varName) != scopeStack.back().end()) {
+        std::cerr << "Error: variable " << varName << " already declared in this scope." << std::endl;
+        exit(1); 
+    }
+
+    int arraySize = std::stoi(ctx->expr()->getText());
+    currentOffset -= 4 * arraySize;
+    scopeStack.back()[varName] = currentOffset;
+    addressTable[ctx] = currentOffset;
+    return 0;
+}

@@ -7,6 +7,7 @@ prog : 'int' 'main' '(' ')' '{' statement* '}' ;
 statement 
     : 'return' expr ';'                         # ReturnStmt
     | 'int' VAR ';'                             # Declaration
+    | 'int' VAR '[' expr ']' ';'                # ArrayDeclaration
     | VAR '=' expr ';'                          # VarAssignment
     | VAR '[' index=expr ']' '=' val=expr ';'   # ArrayAssignment
     | 'if' '(' expr ')' thenStmt=statement 

@@ -31,6 +31,10 @@ public:
     return visitChildren(ctx);
   }
 
+  virtual std::any visitArrayDeclaration(ifccParser::ArrayDeclarationContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
   virtual std::any visitVarAssignment(ifccParser::VarAssignmentContext *ctx) override {
     return visitChildren(ctx);
   }

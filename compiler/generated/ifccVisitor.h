@@ -27,6 +27,8 @@ public:
 
     virtual std::any visitDeclaration(ifccParser::DeclarationContext *context) = 0;
 
+    virtual std::any visitArrayDeclaration(ifccParser::ArrayDeclarationContext *context) = 0;
+
     virtual std::any visitVarAssignment(ifccParser::VarAssignmentContext *context) = 0;
 
     virtual std::any visitArrayAssignment(ifccParser::ArrayAssignmentContext *context) = 0;
