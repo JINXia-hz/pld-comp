@@ -1,5 +1,6 @@
 # compilo version 2
-            *Auteur:JIN Xia*
+*Auteur:JIN Xia*
+
 **existing functions:**
 - op '!'|'~'|'-', '*'|'/'|'%', '+'|'-', '<<'|'>>', '<'|'>'|'<='|'>=', '=='|'!=','&' |'^'|'|'|'&&'|'||'
 - array (def and use)
