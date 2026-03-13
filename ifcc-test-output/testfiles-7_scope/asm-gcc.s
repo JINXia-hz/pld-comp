@@ -11,25 +11,23 @@ main:
 	.cfi_offset 6, -16
 	movq	%rsp, %rbp
 	.cfi_def_cfa_register 6
-	movl	$12, -12(%rbp)
-	movl	$7, -8(%rbp)
-	movl	-12(%rbp), %eax
-	andl	-8(%rbp), %eax
-	leal	0(,%rax,4), %edx
-	movl	-12(%rbp), %eax
-	xorl	-8(%rbp), %eax
-	sarl	%eax
-	orl	%edx, %eax
-	cmpl	$15, %eax
-	setg	%al
-	movzbl	%al, %eax
-	movl	%eax, -4(%rbp)
-	cmpl	$0, -4(%rbp)
-	setne	%al
-	movzbl	%al, %eax
+	movl	$100, -24(%rbp)
+	movl	$2, -20(%rbp)
+	movl	$10, -16(%rbp)
+	movl	-20(%rbp), %eax
+	imull	-16(%rbp), %eax
+	movl	%eax, -20(%rbp)
+	movl	$5, -12(%rbp)
+	movl	$1, -8(%rbp)
 	movl	-12(%rbp), %edx
-	sarl	$3, %edx
-	andl	%edx, %eax
+	movl	-8(%rbp), %eax
+	addl	%edx, %eax
+	addl	$10, %eax
+	movl	%eax, -12(%rbp)
+	addl	$5, -16(%rbp)
+	movl	-24(%rbp), %edx
+	movl	-20(%rbp), %eax
+	addl	%edx, %eax
 	movl	%eax, -4(%rbp)
 	movl	-4(%rbp), %eax
 	popq	%rbp

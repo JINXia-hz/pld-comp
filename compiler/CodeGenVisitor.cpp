@@ -8,10 +8,11 @@ antlrcpp::Any CodeGenVisitor::visitProg(ifccParser::ProgContext *ctx)
     std::cout << "    pushq %rbp\n";
     std::cout << "    movq %rsp, %rbp\n";
 
-    if (totalOffset > 0) {
-        int alignedStackSize = (totalOffset + 15) & ~15; 
-        std::cout << "    subq $" << alignedStackSize << ", %rsp\n";
-    }
+    int tempBuffer = 1024;
+    int alignedStackSize = (totalOffset + tempBuffer + 15) & ~15; 
+    std::cout << "    subq $" << alignedStackSize << ", %rsp\n";
+
+    tempOffset = (totalOffset + 7) & ~7;
 
     for (auto stmt : ctx->statement()) {
         this->visit(stmt); 
@@ -19,7 +20,6 @@ antlrcpp::Any CodeGenVisitor::visitProg(ifccParser::ProgContext *ctx)
 
     std::cout << "end_main:\n"; 
     std::cout << "    movq %rbp, %rsp\n"; 
-    
     std::cout << "    popq %rbp\n";
     std::cout << "    ret\n";
 
@@ -53,12 +53,10 @@ antlrcpp::Any CodeGenVisitor::visitParExpr(ifccParser::ParExprContext *ctx)
 antlrcpp::Any CodeGenVisitor::visitAddExpr(ifccParser::AddExprContext *ctx) 
 {
     this->visit(ctx->expr(0)); 
-
-    std::cout << "    pushq %rax\n"; 
+    this->storeTempReg(); // pushq %rax
 
     this->visit(ctx->expr(1)); 
-
-    std::cout << "    popq %rdx\n"; 
+    this->loadTempReg("rdx"); // popq %rdx
 
     if (ctx->OA->getText() == "-") {
         std::cout << "    negl %eax\n";
@@ -70,12 +68,12 @@ antlrcpp::Any CodeGenVisitor::visitAddExpr(ifccParser::AddExprContext *ctx)
 antlrcpp::Any CodeGenVisitor::visitMultExpr(ifccParser::MultExprContext *ctx) 
 {
     this->visit(ctx->expr(0));
-    std::cout << "    pushq %rax\n";
+    this->storeTempReg();
 
     this->visit(ctx->expr(1));
     std::cout << "    movl %eax, %ecx\n";
     
-    std::cout << "    popq %rax\n";
+    this->loadTempReg("rax");
 
     if (ctx->OM->getText() == "*") {
         std::cout << "    imull %ecx, %eax\n"; 
@@ -119,10 +117,10 @@ antlrcpp::Any CodeGenVisitor::visitDeclaration(ifccParser::DeclarationContext *c
 
 antlrcpp::Any CodeGenVisitor::visitRelationalExpr(ifccParser::RelationalExprContext *ctx) {
     this->visit(ctx->expr(0));
-    std::cout << "    pushq %rax\n";
+    this->storeTempReg();
     this->visit(ctx->expr(1));
     std::cout << "    movl %eax, %ecx\n";
-    std::cout << "    popq %rax\n";
+    this->loadTempReg("rax");
 
     std::cout << "    cmpl %ecx, %eax\n";
 
@@ -138,10 +136,10 @@ antlrcpp::Any CodeGenVisitor::visitRelationalExpr(ifccParser::RelationalExprCont
 
 antlrcpp::Any CodeGenVisitor::visitEqualityExpr(ifccParser::EqualityExprContext *ctx) {
     this->visit(ctx->expr(0));
-    std::cout << "    pushq %rax\n";
+    this->storeTempReg();
     this->visit(ctx->expr(1));
     std::cout << "    movl %eax, %ecx\n";
-    std::cout << "    popq %rax\n";
+    this->loadTempReg("rax");
 
     std::cout << "    cmpl %ecx, %eax\n";
 
@@ -155,40 +153,40 @@ antlrcpp::Any CodeGenVisitor::visitEqualityExpr(ifccParser::EqualityExprContext 
 
 antlrcpp::Any CodeGenVisitor::visitBitwiseAndExpr(ifccParser::BitwiseAndExprContext *ctx) {
     this->visit(ctx->expr(0));
-    std::cout << "    pushq %rax\n";
+    this->storeTempReg();
     this->visit(ctx->expr(1));
     std::cout << "    movl %eax, %ecx\n";
-    std::cout << "    popq %rax\n";
+    this->loadTempReg("rax");
     std::cout << "    andl %ecx, %eax\n";
     return 0;
 }
 
 antlrcpp::Any CodeGenVisitor::visitBitwiseOrExpr(ifccParser::BitwiseOrExprContext *ctx) {
     this->visit(ctx->expr(0));
-    std::cout << "    pushq %rax\n";
+    this->storeTempReg();
     this->visit(ctx->expr(1));
     std::cout << "    movl %eax, %ecx\n";
-    std::cout << "    popq %rax\n";
+    this->loadTempReg("rax");
     std::cout << "    orl %ecx, %eax\n";
     return 0;
 }
 
 antlrcpp::Any CodeGenVisitor::visitBitwiseXorExpr(ifccParser::BitwiseXorExprContext *ctx) {
     this->visit(ctx->expr(0));
-    std::cout << "    pushq %rax\n";
+    this->storeTempReg();
     this->visit(ctx->expr(1));
     std::cout << "    movl %eax, %ecx\n";
-    std::cout << "    popq %rax\n";
+    this->loadTempReg("rax");
     std::cout << "    xorl %ecx, %eax\n";
     return 0;
 }
 
 antlrcpp::Any CodeGenVisitor::visitShiftExpr(ifccParser::ShiftExprContext *ctx) {
     this->visit(ctx->expr(0));
-    std::cout << "    pushq %rax\n";
+    this->storeTempReg();
     this->visit(ctx->expr(1));
     std::cout << "    movl %eax, %ecx\n";
-    std::cout << "    popq %rax\n";
+    this->loadTempReg("rax");
 
     std::string op = ctx->OS->getText();
     if (op == "<<") std::cout << "    sall %cl, %eax\n";
