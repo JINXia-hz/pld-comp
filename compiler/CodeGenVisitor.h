@@ -7,7 +7,7 @@
 
 class  CodeGenVisitor : public ifccBaseVisitor {
 	public:
-        CodeGenVisitor(std::map<std::string, int> symbolTable) : symbolTable(symbolTable) {}
+        CodeGenVisitor(std::map<antlr4::ParserRuleContext*, int> addressTable, int totalOffset) : addressTable(addressTable), totalOffset(totalOffset) {}
         virtual antlrcpp::Any visitProg(ifccParser::ProgContext *ctx) override ;
         virtual antlrcpp::Any visitDeclaration(ifccParser::DeclarationContext *ctx) override ;
         virtual antlrcpp::Any visitReturnStmt(ifccParser::ReturnStmtContext *ctx) override ;
@@ -27,7 +27,8 @@ class  CodeGenVisitor : public ifccBaseVisitor {
         virtual antlrcpp::Any visitIfStmt(ifccParser::IfStmtContext *ctx) override;
         virtual antlrcpp::Any visitBlocStmt(ifccParser::BlocStmtContext *ctx) override;
         protected:
-        std::map<std::string, int> symbolTable;
+        std::map<antlr4::ParserRuleContext*, int> addressTable;
+        int totalOffset;
         int labelCounter = 0;
 };
 

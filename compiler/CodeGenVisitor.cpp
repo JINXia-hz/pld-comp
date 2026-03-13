@@ -8,12 +8,8 @@ antlrcpp::Any CodeGenVisitor::visitProg(ifccParser::ProgContext *ctx)
     std::cout << "    pushq %rbp\n";
     std::cout << "    movq %rsp, %rbp\n";
 
-    int numVariables = symbolTable.size();
-    if (numVariables > 0) {
-        int stackSize = numVariables * 4;
-
-        int alignedStackSize = (stackSize + 15) & ~15; 
-        
+    if (totalOffset > 0) {
+        int alignedStackSize = (totalOffset + 15) & ~15; 
         std::cout << "    subq $" << alignedStackSize << ", %rsp\n";
     }
 
@@ -32,11 +28,10 @@ antlrcpp::Any CodeGenVisitor::visitProg(ifccParser::ProgContext *ctx)
 
 antlrcpp::Any CodeGenVisitor::visitAssignment(ifccParser::AssignmentContext *ctx)
 {
-    std::string varName = ctx->VAR()->getText(); 
 
     this->visit(ctx->expr()); 
 
-    int position = symbolTable[varName]; 
+    int position = addressTable[ctx]; 
 
     std::cout << "    movl %eax, " << position << "(%rbp)\n"; 
 
@@ -102,18 +97,15 @@ antlrcpp::Any CodeGenVisitor::visitConstExpr(ifccParser::ConstExprContext *ctx)
 
 antlrcpp::Any CodeGenVisitor::visitVarExpr(ifccParser::VarExprContext *ctx) 
 {
-    std::string varName = ctx->VAR()->getText();
-    int position = symbolTable[varName]; 
-
+    int position = addressTable[ctx];
     std::cout << "    movl " << position << "(%rbp), %eax" << std::endl;
     return 0;
 }
 
 antlrcpp::Any CodeGenVisitor::visitArrayExpr(ifccParser::ArrayExprContext *ctx) {
-    std::string varName = ctx->VAR()->getText();
     int index = std::stoi(ctx->CONST()->getText());
 
-    int basePosition = symbolTable[varName];
+    int basePosition = addressTable[ctx];
     int elementPosition = basePosition - (index * 4);
 
     std::cout << "    movl " << elementPosition << "(%rbp), %eax" << std::endl;
