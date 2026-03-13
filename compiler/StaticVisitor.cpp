@@ -49,7 +49,7 @@ antlrcpp::Any StaticVisitor::visitVarExpr(ifccParser::VarExprContext *ctx) {
     return 0;
 }
 
-antlrcpp::Any StaticVisitor::visitAssignment(ifccParser::AssignmentContext *ctx) {
+antlrcpp::Any StaticVisitor::visitVarAssignment(ifccParser::VarAssignmentContext *ctx) {
     std::string varName = ctx->VAR()->getText();
     int addr = findVariable(varName);
     
@@ -60,6 +60,21 @@ antlrcpp::Any StaticVisitor::visitAssignment(ifccParser::AssignmentContext *ctx)
     addressTable[ctx] = addr;
     
     return this->visit(ctx->expr());
+}
+
+antlrcpp::Any StaticVisitor::visitArrayAssignment(ifccParser::ArrayAssignmentContext *ctx) {
+    std::string varName = ctx->VAR()->getText();
+    int addr = findVariable(varName);
+
+    if (addr == 1) {
+        std::cerr << "Error: array " << varName << " not declared." << std::endl;
+        exit(1);
+    }
+
+    addressTable[ctx] = addr;
+    this->visit(ctx->index);
+    this->visit(ctx->val);
+    return 0;
 }
 
 antlrcpp::Any StaticVisitor::visitBlocStmt(ifccParser::BlocStmtContext *ctx) {
@@ -84,4 +99,19 @@ antlrcpp::Any StaticVisitor::visitIfStmt(ifccParser::IfStmtContext *ctx) {
 
 antlrcpp::Any StaticVisitor::visitReturnStmt(ifccParser::ReturnStmtContext *ctx) {
     return this->visit(ctx->expr());
+}
+
+antlrcpp::Any StaticVisitor::visitArrayExpr(ifccParser::ArrayExprContext *ctx) {
+    std::string varName = ctx->VAR()->getText();
+    
+    int addr = findVariable(varName);
+
+    if (addr == 1) {
+        std::cerr << "Error: array " << varName << " used but not declared." << std::endl;
+        exit(1);
+    }
+
+    addressTable[ctx] = addr; 
+
+    return this->visit(ctx->expr()); 
 }

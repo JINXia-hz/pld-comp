@@ -11,10 +11,12 @@ public:
     virtual antlrcpp::Any visitProg(ifccParser::ProgContext *ctx) override;
     virtual antlrcpp::Any visitDeclaration(ifccParser::DeclarationContext *ctx) override;
     virtual antlrcpp::Any visitVarExpr(ifccParser::VarExprContext *ctx) override;
-    virtual antlrcpp::Any visitAssignment(ifccParser::AssignmentContext *ctx) override;
+    virtual antlrcpp::Any visitVarAssignment(ifccParser::VarAssignmentContext *ctx) override;
+    virtual antlrcpp::Any visitArrayAssignment(ifccParser::ArrayAssignmentContext *ctx) override;
     virtual antlrcpp::Any visitReturnStmt(ifccParser::ReturnStmtContext *ctx) override;
     virtual antlrcpp::Any visitIfStmt(ifccParser::IfStmtContext *ctx) override;
     virtual antlrcpp::Any visitBlocStmt(ifccParser::BlocStmtContext *ctx) override;
+    virtual antlrcpp::Any visitArrayExpr(ifccParser::ArrayExprContext *ctx) override;
     int getTotalOffset() { return -currentOffset; }
     std::map<antlr4::ParserRuleContext*, int> getAddressTable() { return addressTable; }
 

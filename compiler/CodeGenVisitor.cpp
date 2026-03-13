@@ -26,7 +26,7 @@ antlrcpp::Any CodeGenVisitor::visitProg(ifccParser::ProgContext *ctx)
     return 0;
 }
 
-antlrcpp::Any CodeGenVisitor::visitAssignment(ifccParser::AssignmentContext *ctx)
+antlrcpp::Any CodeGenVisitor::visitVarAssignment(ifccParser::VarAssignmentContext *ctx)
 {
 
     this->visit(ctx->expr()); 
@@ -34,6 +34,22 @@ antlrcpp::Any CodeGenVisitor::visitAssignment(ifccParser::AssignmentContext *ctx
     int position = addressTable[ctx]; 
 
     std::cout << "    movl %eax, " << position << "(%rbp)\n"; 
+
+    return 0;
+}
+
+antlrcpp::Any CodeGenVisitor::visitArrayAssignment(ifccParser::ArrayAssignmentContext *ctx)
+{
+    this->visit(ctx->index); 
+    std::cout << "    cltq\n"; 
+    int basePosition = addressTable[ctx]; 
+    std::cout << "    leal " << basePosition << "(%rbp), %rdx\n"; 
+    std::cout << "    imull $4, %rax, %rax\n"; 
+    std::cout << "    addq %rdx, %rax\n"; 
+
+    this->visit(ctx->val); 
+
+    std::cout << "    movl %eax, (%rax)\n"; 
 
     return 0;
 }
@@ -77,9 +93,13 @@ antlrcpp::Any CodeGenVisitor::visitMultExpr(ifccParser::MultExprContext *ctx)
 
     if (ctx->OM->getText() == "*") {
         std::cout << "    imull %ecx, %eax\n"; 
-    } else {
+    } else if (ctx->OM->getText() == "/") {
         std::cout << "    cltd\n";
         std::cout << "    idivl %ecx\n";
+    } else if (ctx->OM->getText() == "%") {
+        std::cout << "    cltd\n";
+        std::cout << "    idivl %ecx\n";
+        std::cout << "    movl %edx, %eax\n"; 
     }
 
     return 0;
@@ -101,12 +121,10 @@ antlrcpp::Any CodeGenVisitor::visitVarExpr(ifccParser::VarExprContext *ctx)
 }
 
 antlrcpp::Any CodeGenVisitor::visitArrayExpr(ifccParser::ArrayExprContext *ctx) {
-    int index = std::stoi(ctx->CONST()->getText());
-
-    int basePosition = addressTable[ctx];
-    int elementPosition = basePosition - (index * 4);
-
-    std::cout << "    movl " << elementPosition << "(%rbp), %eax" << std::endl;
+    this->visit(ctx->expr()); 
+    std::cout << "    cltq\n"; 
+    int basePosition = addressTable[ctx]; 
+    std::cout << "    movl " << basePosition << "(%rbp, %rax, 4), %eax\n";
     return 0;
 }
 
@@ -226,5 +244,84 @@ antlrcpp::Any CodeGenVisitor::visitIfStmt(ifccParser::IfStmtContext *ctx) {
     }
 
     std::cout << endLabel << ":\n";
+    return 0;
+}
+
+antlrcpp::Any CodeGenVisitor::visitUnaryExpr(ifccParser::UnaryExprContext *ctx) {
+    this->visit(ctx->expr());
+
+    std::string op = ctx->OU->getText();
+    if (op == "-") {
+        std::cout << "    negl %eax\n";
+    } else if (op == "~") {
+        std::cout << "    notl %eax\n";
+    } else if (op == "!") {
+        std::cout << "    cmpl $0, %eax\n";
+        std::cout << "    sete %al\n";
+        std::cout << "    movzbl %al, %eax\n";
+    }
+
+    return 0;
+}
+
+antlrcpp::Any CodeGenVisitor::visitLogicalAndExpr(ifccParser::LogicalAndExprContext *ctx) {
+    int id = labelCounter++;
+    std::string falseLabel = "logical_and_false_" + std::to_string(id);
+    std::string endLabel = "logical_and_end_" + std::to_string(id);
+
+    this->visit(ctx->expr(0));
+    std::cout << "    testl %eax, %eax\n";
+    std::cout << "    je " << falseLabel << "\n";
+
+    // true+
+    this->visit(ctx->expr(1));
+    std::cout << "    testl %eax, %eax\n";
+    std::cout << "    je " << falseLabel << "\n";
+
+    // true*2
+    std::cout << "    movl $1, %eax\n";
+    std::cout << "    jmp " << endLabel << "\n";
+
+    // 1 false
+    std::cout << falseLabel << ":\n";
+    std::cout << "    movl $0, %eax\n";
+
+    std::cout << endLabel << ":\n";
+    return 0;
+}
+
+antlrcpp::Any CodeGenVisitor::visitLogicalOrExpr(ifccParser::LogicalOrExprContext *ctx) {
+    int id = labelCounter++;
+    std::string trueLabel = "logical_or_true_" + std::to_string(id);
+    std::string endLabel = "logical_or_end_" + std::to_string(id);
+
+    this->visit(ctx->expr(0));
+    std::cout << "    testl %eax, %eax\n";
+    std::cout << "    jne " << trueLabel << "\n";
+    this->visit(ctx->expr(1));
+    std::cout << "    testl %eax, %eax\n";
+    std::cout << "    jne " << trueLabel << "\n";
+    std::cout << "    movl $0, %eax\n";
+    std::cout << "    jmp " << endLabel << "\n";
+    std::cout << trueLabel << ":\n";
+    std::cout << "    movl $1, %eax\n";
+    std::cout << endLabel << ":\n";
+    return 0;
+}
+
+antlrcpp::Any CodeGenVisitor::visitArrayAssignment(ifccParser::ArrayAssignmentContext *ctx) {
+    this->visit(ctx->val); 
+    this->storeTempReg(); 
+
+    this->visit(ctx->index); 
+
+    std::cout << "    cltq\n"; 
+
+    this->loadTempReg("rdx"); 
+
+    int basePosition = addressTable[ctx]; 
+
+    std::cout << "    movl %edx, " << basePosition << "(%rbp, %rax, 4)\n";
+
     return 0;
 }
