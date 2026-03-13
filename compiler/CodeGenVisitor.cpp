@@ -26,34 +26,6 @@ antlrcpp::Any CodeGenVisitor::visitProg(ifccParser::ProgContext *ctx)
     return 0;
 }
 
-antlrcpp::Any CodeGenVisitor::visitVarAssignment(ifccParser::VarAssignmentContext *ctx)
-{
-
-    this->visit(ctx->expr()); 
-
-    int position = addressTable[ctx]; 
-
-    std::cout << "    movl %eax, " << position << "(%rbp)\n"; 
-
-    return 0;
-}
-
-antlrcpp::Any CodeGenVisitor::visitArrayAssignment(ifccParser::ArrayAssignmentContext *ctx)
-{
-    this->visit(ctx->index); 
-    std::cout << "    cltq\n"; 
-    int basePosition = addressTable[ctx]; 
-    std::cout << "    leal " << basePosition << "(%rbp), %rdx\n"; 
-    std::cout << "    imull $4, %rax, %rax\n"; 
-    std::cout << "    addq %rdx, %rax\n"; 
-
-    this->visit(ctx->val); 
-
-    std::cout << "    movl %eax, (%rax)\n"; 
-
-    return 0;
-}
-
 antlrcpp::Any CodeGenVisitor::visitReturnStmt(ifccParser::ReturnStmtContext *ctx)
 {
     this->visit(ctx->expr()); 
@@ -214,7 +186,7 @@ antlrcpp::Any CodeGenVisitor::visitShiftExpr(ifccParser::ShiftExprContext *ctx) 
 }
 
 antlrcpp::Any CodeGenVisitor::visitBlocStmt(ifccParser::BlocStmtContext *ctx) {
-    for (auto stmt : ctx->statements) {
+    for (auto stmt : ctx->statement()) {
         this->visit(stmt);
     }
     return 0;
@@ -309,19 +281,20 @@ antlrcpp::Any CodeGenVisitor::visitLogicalOrExpr(ifccParser::LogicalOrExprContex
     return 0;
 }
 
+antlrcpp::Any CodeGenVisitor::visitVarAssignment(ifccParser::VarAssignmentContext *ctx) {
+    this->visit(ctx->expr()); 
+    int position = addressTable[ctx];
+    std::cout << "    movl %eax, " << position << "(%rbp)\n";
+    return 0;
+}
+
 antlrcpp::Any CodeGenVisitor::visitArrayAssignment(ifccParser::ArrayAssignmentContext *ctx) {
-    this->visit(ctx->val); 
-    this->storeTempReg(); 
-
-    this->visit(ctx->index); 
-
+    this->visit(ctx->expr(0)); 
     std::cout << "    cltq\n"; 
-
-    this->loadTempReg("rdx"); 
-
     int basePosition = addressTable[ctx]; 
-
-    std::cout << "    movl %edx, " << basePosition << "(%rbp, %rax, 4)\n";
-
+    this->visit(ctx->expr(1)); 
+    std::cout << "    movl %eax, %ecx\n"; 
+    this->loadTempReg("rax"); 
+    std::cout << "    movl %ecx, " << basePosition << "(%rbp, %rax, 4)\n";
     return 0;
 }
