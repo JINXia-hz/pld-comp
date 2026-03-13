@@ -291,6 +291,7 @@ antlrcpp::Any CodeGenVisitor::visitVarAssignment(ifccParser::VarAssignmentContex
 antlrcpp::Any CodeGenVisitor::visitArrayAssignment(ifccParser::ArrayAssignmentContext *ctx) {
     this->visit(ctx->expr(0)); 
     std::cout << "    cltq\n"; 
+    this->storeTempReg();
     int basePosition = addressTable[ctx]; 
     this->visit(ctx->expr(1)); 
     std::cout << "    movl %eax, %ecx\n"; 

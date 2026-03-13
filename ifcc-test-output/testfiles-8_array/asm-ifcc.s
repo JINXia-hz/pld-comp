@@ -8,9 +8,10 @@ main:
     movl %eax, -44(%rbp)
     movl -44(%rbp), %eax
     cltq
+    movq %rax, -56(%rbp)
     movl $100, %eax
     movl %eax, %ecx
-    movq -48(%rbp), %rax
+    movq -56(%rbp), %rax
     movl %ecx, -40(%rbp, %rax, 4)
     movl $0, %eax
     cltq
