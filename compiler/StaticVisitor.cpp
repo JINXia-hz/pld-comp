@@ -14,12 +14,13 @@ int StaticVisitor::findVariable(std::string name) {
     return 1;
 }
 
-antlrcpp::Any StaticVisitor::visitProg(ifccParser::ProgContext *ctx) {
-    for (auto stmt : ctx->statement()) {
-        this->visit(stmt);
+antlrcpp::Any CodeGenVisitor::visitProg(ifccParser::ProgContext *ctx) {
+    for (auto funcCtx : ctx->functionDef()) {
+        this->visit(funcCtx); 
     }
     return 0;
 }
+
 antlrcpp::Any StaticVisitor::visitDeclaration(ifccParser::DeclarationContext *ctx) {
     std::string varName = ctx->VAR()->getText();
 
@@ -128,5 +129,21 @@ antlrcpp::Any StaticVisitor::visitArrayDeclaration(ifccParser::ArrayDeclarationC
     currentOffset -= 4 * arraySize;
     scopeStack.back()[varName] = currentOffset;
     addressTable[ctx] = currentOffset;
+    return 0;
+}
+
+antlrcpp::Any StaticVisitor::visitFunctionDef(ifccParser::FunctionDefContext *ctx) {
+    std::string funcName = ctx->VAR(0)->getText();
+    
+    currentOffset = 0; 
+    
+    for (size_t i = 1; i < ctx->VAR().size(); ++i) {
+        currentOffset += 4;
+    }
+
+    this->visit(ctx->blocStmt());
+
+    functionOffsets[funcName] = currentOffset;
+
     return 0;
 }

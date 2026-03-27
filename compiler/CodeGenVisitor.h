@@ -6,7 +6,8 @@
 
 class CodeGenVisitor : public ifccBaseVisitor {
 public:
-    CodeGenVisitor(std::map<antlr4::ParserRuleContext*, int> addressTable, int totalOffset);
+    CodeGenVisitor(std::map<antlr4::ParserRuleContext*, int> addressTable, 
+                   std::map<std::string, int> functionOffsets);
     ~CodeGenVisitor();
     
     virtual antlrcpp::Any visitProg(ifccParser::ProgContext *ctx) override;
@@ -36,6 +37,6 @@ public:
     CFG* getCFG() { return cfg; }
 
 protected:
-    std::map<antlr4::ParserRuleContext*, int> addressTable;
-    CFG* cfg;
+    std::map<std::string, int> functionOffsets;
+    std::vector<CFG*> cfgs;
 };

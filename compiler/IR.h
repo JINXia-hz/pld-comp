@@ -42,9 +42,11 @@ public:
 
 class CFG {
 public:
+    CFG(std::string funcName, int totalOffset); // 构造函数加一个参数
+    std::string funcName;
     CFG(int totalOffset);
     void add_bb(BasicBlock* bb);
-    void gen_asm(std::ostream &o);
+    void gen_asm(std::ostream &o ,std::string functionName);
     std::string IR_reg_to_asm(std::string reg);
     std::string create_new_tempvar();
     std::string get_next_label();

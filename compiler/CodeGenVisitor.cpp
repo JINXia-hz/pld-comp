@@ -22,7 +22,6 @@ antlrcpp::Any CodeGenVisitor::visitProg(ifccParser::ProgContext *ctx) {
 }
 
 antlrcpp::Any CodeGenVisitor::visitReturnStmt(ifccParser::ReturnStmtContext *ctx) {
-    // 注意这里改成了 std::any_cast
     std::string ret_var = std::any_cast<std::string>(this->visit(ctx->expr())); 
     cfg->current_bb->add_IRInstr(Operation::ret, "", {ret_var});
     return 0;
@@ -297,6 +296,35 @@ antlrcpp::Any CodeGenVisitor::visitWhileStmt(ifccParser::WhileStmtContext *ctx) 
 
     cfg->add_bb(endBB);
     cfg->current_bb = endBB;
+
+    return 0;
+}
+antlrcpp::Any CodeGenVisitor::visitFunctionDef(ifccParser::FunctionDefContext *ctx) {
+    std::string funcName = ctx->VAR(0)->getText();
+
+    int function_total_offset = functionOffsets[funcName];
+
+    CFG* funcCFG = new CFG(funcName, function_total_offset);
+    this->cfgs.push_back(funcCFG); 
+    this->cfg = funcCFG;
+
+    BasicBlock* entryBB = new BasicBlock(funcCFG, funcName);
+    funcCFG->add_bb(entryBB);
+    funcCFG->current_bb = entryBB;
+
+    std::vector<std::string> paramRegs = {"%edi", "%esi", "%edx", "%ecx", "%r8d", "%r9d"};
+    for (size_t i = 1; i < ctx->VAR().size(); ++i) {
+        if (i - 1 < 6) {
+            int offset = addressTable[ctx->VAR(i)]; 
+            std::string dest = "!offset_" + std::to_string(offset);
+            funcCFG->current_bb->add_IRInstr(Operation::copy, dest, {paramRegs[i-1]});
+        }
+    }
+
+    this->visit(ctx->blocStmt());
+    std::string defaultRetVar = cfg->create_new_tempvar();
+    cfg->current_bb->add_IRInstr(Operation::ldconst, defaultRetVar, {"0"});
+    cfg->current_bb->add_IRInstr(Operation::ret, "", {defaultRetVar});
 
     return 0;
 }

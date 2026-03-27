@@ -121,7 +121,7 @@ void IRInstr::gen_asm(std::ostream &o) {
             break;
         case Operation::ret:
             o << "    movl " << rParam(0) << ", %eax\n";
-            o << "    jmp end_main\n";
+            o << "    jmp .L_end_" << bb->cfg->funcName << "\n"; 
             break;
         case Operation::jmp_if_zero:
             o << "    movl " << rParam(0) << ", %eax\n";
@@ -153,7 +153,7 @@ void BasicBlock::gen_asm(std::ostream &o) {
     }
 }
 
-CFG::CFG(int totalOffset_) : totalOffset(totalOffset_) {
+CFG::CFG(std::string funcName_, int totalOffset_) : funcName(funcName_), totalOffset(totalOffset_) {
     tempOffset = (totalOffset + 7) & ~7;
 }
 
@@ -177,13 +177,15 @@ std::string CFG::IR_reg_to_asm(std::string reg) {
         return reg.substr(8) + "(%rbp)";
     } else if (reg.find("!tmp_") == 0) {
         return std::to_string(tmp_offsets[reg]) + "(%rbp)";
+    } else if (reg.find("%") == 0) {
+        return reg;
     }
     return ""; // Fallback
 }
 
-void CFG::gen_asm(std::ostream &o) {
-    o << ".globl main\n";
-    o << "main:\n";
+void CFG::gen_asm(std::ostream &o, std::string functionName){
+    o << ".globl " << functionName << "\n";
+    o << functionName << ":\n";
     o << "    pushq %rbp\n";
     o << "    movq %rsp, %rbp\n";
 
@@ -194,7 +196,7 @@ void CFG::gen_asm(std::ostream &o) {
         bb->gen_asm(o);
     }
 
-    o << "end_main:\n";
+    o << ".L_end_" << functionName << ":\n";
     o << "    movq %rbp, %rsp\n";
     o << "    popq %rbp\n";
     o << "    ret\n";

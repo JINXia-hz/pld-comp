@@ -20,6 +20,7 @@ public:
     virtual antlrcpp::Any visitArrayDeclaration(ifccParser::ArrayDeclarationContext *ctx) override;
     int getTotalOffset() { return -currentOffset; }
     std::map<antlr4::ParserRuleContext*, int> getAddressTable() { return addressTable; }
+    std::map<std::string, int> functionOffsets;
 
 private:
     std::vector<std::map<std::string, int>> scopeStack;

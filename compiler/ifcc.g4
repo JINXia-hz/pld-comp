@@ -2,7 +2,13 @@ grammar ifcc;
 
 axiom : prog EOF ;
 
-prog : 'int' 'main' '(' ')' '{' statement* '}' ;
+prog :
+    functionDef+
+    ;
+
+functionDef
+    : 'int' VAR '(' ( 'int' VAR (',' 'int' VAR)* )? ')' blocStmt
+    ;
 
 statement 
     : 'return' expr ';'                         # ReturnStmt
