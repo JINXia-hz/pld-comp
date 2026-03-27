@@ -1,7 +1,7 @@
 # compilo version 3
-#*Auteur:JIN Xia*
+## *Auteur:JIN Xia*
 
-**Logical Structure*
+*Logical Structure*
 This compiler adopts an architectural approach consisting of *Static Semantic Scanning* → *Intermediate Code Generation* → *Backend Instruction Mapping*.
 
 - Static Semantic Scanning
