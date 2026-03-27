@@ -260,14 +260,6 @@ antlrcpp::Any CodeGenVisitor::visitLogicalOrExpr(ifccParser::LogicalOrExprContex
     return dest;
 }
 
-antlrcpp::Any CodeGenVisitor::visitVarAssignment(ifccParser::VarAssignmentContext *ctx) {
-    std::string right = std::any_cast<std::string>(this->visit(ctx->expr())); 
-    int position = addressTable[ctx];
-    std::string left = "!offset_" + std::to_string(position);
-    cfg->current_bb->add_IRInstr(Operation::copy, left, {right});
-    return left;
-}
-
 antlrcpp::Any CodeGenVisitor::visitArrayAssignment(ifccParser::ArrayAssignmentContext *ctx) {
     std::string index = std::any_cast<std::string>(this->visit(ctx->expr(0)));
     std::string val = std::any_cast<std::string>(this->visit(ctx->expr(1)));
@@ -357,4 +349,12 @@ antlrcpp::Any CodeGenVisitor::visitCallExpr(ifccParser::CallExprContext *ctx) {
     cfg->current_bb->add_IRInstr(Operation::call, dest, {funcName});
 
     return dest;
+}
+
+antlrcpp::Any CodeGenVisitor::visitVarAssignmentExpr(ifccParser::VarAssignmentExprContext *ctx) {
+    std::string right = std::any_cast<std::string>(this->visit(ctx->expr())); 
+    int position = addressTable[ctx];
+    std::string left = "!offset_" + std::to_string(position);
+    cfg->current_bb->add_IRInstr(Operation::copy, left, {right});
+    return left;
 }

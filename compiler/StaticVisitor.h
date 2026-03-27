@@ -14,7 +14,7 @@ public:
     virtual antlrcpp::Any visitFunctionDef(ifccParser::FunctionDefContext *ctx) override;
     virtual antlrcpp::Any visitDeclaration(ifccParser::DeclarationContext *ctx) override;
     virtual antlrcpp::Any visitVarExpr(ifccParser::VarExprContext *ctx) override;
-    virtual antlrcpp::Any visitVarAssignment(ifccParser::VarAssignmentContext *ctx) override;
+    virtual antlrcpp::Any visitVarAssignmentExpr(ifccParser::VarAssignmentExprContext *ctx) override;
     virtual antlrcpp::Any visitArrayAssignment(ifccParser::ArrayAssignmentContext *ctx) override;
     virtual antlrcpp::Any visitBlocStmt(ifccParser::BlocStmtContext *ctx) override;
     virtual antlrcpp::Any visitIfStmt(ifccParser::IfStmtContext *ctx) override;

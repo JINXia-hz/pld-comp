@@ -12,10 +12,10 @@ functionDef
 
 statement 
     : 'return' expr ';'                         # ReturnStmt
-    | 'int' VAR ';'                             # Declaration
+    | 'int' VAR (',' VAR)* ';'                  # Declaration
     | 'int' VAR '[' expr ']' ';'                # ArrayDeclaration
-    | VAR '=' expr ';'                          # VarAssignment
     | VAR '[' index=expr ']' '=' val=expr ';'   # ArrayAssignment
+    | expr ';'                                  # ExprStmt
     | 'if' '(' expr ')' thenStmt=statement 
       ('else' elseStmt=statement)?              # IfStmt
     | 'while' '(' expr ')' bodyStmt=statement   # WhileStmt
@@ -38,6 +38,7 @@ expr : '(' expr ')'                         # ParExpr
      | VAR                                  # VarExpr
      | CONST                                # ConstExpr
      | VAR '[' expr ']'                     # ArrayExpr 
+     | VAR '=' expr                         # VarAssignmentExpr
      ;
 
 RETURN : 'return' ;

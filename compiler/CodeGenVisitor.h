@@ -30,11 +30,11 @@ public:
     virtual antlrcpp::Any visitUnaryExpr(ifccParser::UnaryExprContext *ctx) override;
     virtual antlrcpp::Any visitLogicalAndExpr(ifccParser::LogicalAndExprContext *ctx) override;
     virtual antlrcpp::Any visitLogicalOrExpr(ifccParser::LogicalOrExprContext *ctx) override;
-    virtual antlrcpp::Any visitVarAssignment(ifccParser::VarAssignmentContext *ctx) override;
     virtual antlrcpp::Any visitArrayAssignment(ifccParser::ArrayAssignmentContext *ctx) override;
     virtual antlrcpp::Any visitWhileStmt(ifccParser::WhileStmtContext *ctx) override;
     virtual antlrcpp::Any visitFunctionDef(ifccParser::FunctionDefContext *ctx) override;
     virtual antlrcpp::Any visitCallExpr(ifccParser::CallExprContext *ctx) override;
+    virtual antlrcpp::Any visitVarAssignmentExpr(ifccParser::VarAssignmentExprContext *ctx) override;
     void generate_all_asm(std::ostream &o) {
         for (auto c : cfgs) {
             c->gen_asm(o, c->funcName);

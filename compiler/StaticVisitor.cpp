@@ -27,18 +27,17 @@ antlrcpp::Any StaticVisitor::visitProg(ifccParser::ProgContext *ctx) {
 }
 
 antlrcpp::Any StaticVisitor::visitDeclaration(ifccParser::DeclarationContext *ctx) {
-    std::string varName = ctx->VAR()->getText();
+    for (auto varToken : ctx->VAR()) {
+        std::string varName = varToken->getText();
 
-    if (scopeStack.back().find(varName) != scopeStack.back().end()) {
-        std::cerr << "Error: variable " << varName << " already declared in this scope." << std::endl;
-        exit(1); 
+        if (scopeStack.back().find(varName) != scopeStack.back().end()) {
+            std::cerr << "Error: variable " << varName << " already declared." << std::endl;
+            exit(1);
+        }
+
+        currentOffset -= 4; 
+        scopeStack.back()[varName] = currentOffset; 
     }
-
-    currentOffset -= 4; 
-    scopeStack.back()[varName] = currentOffset; 
-    
-    addressTable[ctx] = currentOffset; 
-
     return 0;
 }
 
@@ -53,19 +52,6 @@ antlrcpp::Any StaticVisitor::visitVarExpr(ifccParser::VarExprContext *ctx) {
 
     addressTable[ctx] = addr; 
     return 0;
-}
-
-antlrcpp::Any StaticVisitor::visitVarAssignment(ifccParser::VarAssignmentContext *ctx) {
-    std::string varName = ctx->VAR()->getText();
-    int addr = findVariable(varName);
-    
-    if (addr == 1) {
-        std::cerr << "Error: variable " << varName << " used before declaration." << std::endl;
-        exit(1);
-    }
-    addressTable[ctx] = addr;
-    
-    return this->visit(ctx->expr());
 }
 
 antlrcpp::Any StaticVisitor::visitArrayAssignment(ifccParser::ArrayAssignmentContext *ctx) {
@@ -180,4 +166,16 @@ antlrcpp::Any StaticVisitor::visitCallExpr(ifccParser::CallExprContext *ctx) {
         this->visit(arg);
     }
     return 0;
+}
+
+antlrcpp::Any StaticVisitor::visitVarAssignmentExpr(ifccParser::VarAssignmentExprContext *ctx) {
+    std::string varName = ctx->VAR()->getText();
+    int addr = findVariable(varName);
+    
+    if (addr == 1) {
+        std::cerr << "Error: variable " << varName << " used before declaration." << std::endl;
+        exit(1);
+    }
+    addressTable[ctx] = addr;
+    return this->visit(ctx->expr());
 }

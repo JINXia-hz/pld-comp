@@ -129,6 +129,15 @@ public:
     virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
   };
 
+  class  ExprStmtContext : public StatementContext {
+  public:
+    ExprStmtContext(StatementContext *ctx);
+
+    ExprContext *expr();
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+  };
+
   class  WhileStmtContext : public StatementContext {
   public:
     WhileStmtContext(StatementContext *ctx);
@@ -155,17 +164,8 @@ public:
   public:
     DeclarationContext(StatementContext *ctx);
 
-    antlr4::tree::TerminalNode *VAR();
-
-    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
-  };
-
-  class  VarAssignmentContext : public StatementContext {
-  public:
-    VarAssignmentContext(StatementContext *ctx);
-
-    antlr4::tree::TerminalNode *VAR();
-    ExprContext *expr();
+    std::vector<antlr4::tree::TerminalNode *> VAR();
+    antlr4::tree::TerminalNode* VAR(size_t i);
 
     virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
   };
@@ -356,6 +356,16 @@ public:
 
     std::vector<ExprContext *> expr();
     ExprContext* expr(size_t i);
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+  };
+
+  class  VarAssignmentExprContext : public ExprContext {
+  public:
+    VarAssignmentExprContext(ExprContext *ctx);
+
+    antlr4::tree::TerminalNode *VAR();
+    ExprContext *expr();
 
     virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
   };

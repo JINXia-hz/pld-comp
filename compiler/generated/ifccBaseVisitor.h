@@ -39,11 +39,11 @@ public:
     return visitChildren(ctx);
   }
 
-  virtual std::any visitVarAssignment(ifccParser::VarAssignmentContext *ctx) override {
+  virtual std::any visitArrayAssignment(ifccParser::ArrayAssignmentContext *ctx) override {
     return visitChildren(ctx);
   }
 
-  virtual std::any visitArrayAssignment(ifccParser::ArrayAssignmentContext *ctx) override {
+  virtual std::any visitExprStmt(ifccParser::ExprStmtContext *ctx) override {
     return visitChildren(ctx);
   }
 
@@ -116,6 +116,10 @@ public:
   }
 
   virtual std::any visitBitwiseXorExpr(ifccParser::BitwiseXorExprContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
+  virtual std::any visitVarAssignmentExpr(ifccParser::VarAssignmentExprContext *ctx) override {
     return visitChildren(ctx);
   }
 

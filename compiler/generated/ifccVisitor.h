@@ -31,9 +31,9 @@ public:
 
     virtual std::any visitArrayDeclaration(ifccParser::ArrayDeclarationContext *context) = 0;
 
-    virtual std::any visitVarAssignment(ifccParser::VarAssignmentContext *context) = 0;
-
     virtual std::any visitArrayAssignment(ifccParser::ArrayAssignmentContext *context) = 0;
+
+    virtual std::any visitExprStmt(ifccParser::ExprStmtContext *context) = 0;
 
     virtual std::any visitIfStmt(ifccParser::IfStmtContext *context) = 0;
 
@@ -70,6 +70,8 @@ public:
     virtual std::any visitCallExpr(ifccParser::CallExprContext *context) = 0;
 
     virtual std::any visitBitwiseXorExpr(ifccParser::BitwiseXorExprContext *context) = 0;
+
+    virtual std::any visitVarAssignmentExpr(ifccParser::VarAssignmentExprContext *context) = 0;
 
     virtual std::any visitShiftExpr(ifccParser::ShiftExprContext *context) = 0;
 
