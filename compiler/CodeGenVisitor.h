@@ -2,11 +2,12 @@
 
 #include "antlr4-runtime.h"
 #include "generated/ifccBaseVisitor.h"
+#include "IR.h"
 
 class CodeGenVisitor : public ifccBaseVisitor {
 public:
-    CodeGenVisitor(std::map<antlr4::ParserRuleContext*, int> addressTable, int totalOffset) 
-        : addressTable(addressTable), totalOffset(totalOffset) {}
+    CodeGenVisitor(std::map<antlr4::ParserRuleContext*, int> addressTable, int totalOffset);
+    ~CodeGenVisitor();
     
     virtual antlrcpp::Any visitProg(ifccParser::ProgContext *ctx) override;
     virtual antlrcpp::Any visitDeclaration(ifccParser::DeclarationContext *ctx) override;
@@ -30,22 +31,10 @@ public:
     virtual antlrcpp::Any visitLogicalOrExpr(ifccParser::LogicalOrExprContext *ctx) override;
     virtual antlrcpp::Any visitVarAssignment(ifccParser::VarAssignmentContext *ctx) override;
     virtual antlrcpp::Any visitArrayAssignment(ifccParser::ArrayAssignmentContext *ctx) override;
+
+    CFG* getCFG() { return cfg; }
+
 protected:
     std::map<antlr4::ParserRuleContext*, int> addressTable;
-    int totalOffset;
-    int labelCounter = 0;
-
-    int tempOffset = 0; 
-    
-    // 替代 pushq %rax
-    void storeTempReg() {
-        tempOffset += 8;
-        std::cout << "    movq %rax, -" << tempOffset << "(%rbp)\n";
-    }
-
-    // 替代 popq，需传入目标寄存器名称（如 "rdx", "rax"）
-    void loadTempReg(const std::string& reg) {
-        std::cout << "    movq -" << tempOffset << "(%rbp), %" << reg << "\n";
-        tempOffset -= 8;
-    }
+    CFG* cfg;
 };

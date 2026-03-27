@@ -166,4 +166,4 @@ build/CodeGenVisitor.o: CodeGenVisitor.cpp CodeGenVisitor.h \
  /usr/local/include/antlr4-runtime/tree/xpath/XPathWildcardAnywhereElement.h \
  /usr/local/include/antlr4-runtime/tree/xpath/XPathWildcardElement.h \
  generated/ifccBaseVisitor.h generated/ifccVisitor.h \
- generated/ifccParser.h
+ generated/ifccParser.h IR.h

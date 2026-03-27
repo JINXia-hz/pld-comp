@@ -51,8 +51,9 @@ int main(int argn, const char **argv)
 
   StaticVisitor s;
   s.visit(tree);
-  CodeGenVisitor v(s.getAddressTable(),s.getTotalOffset());
+  CodeGenVisitor v(s.getAddressTable(), s.getTotalOffset());
   v.visit(tree);
+  v.getCFG()->gen_asm(std::cout);
 
   return 0;
 }

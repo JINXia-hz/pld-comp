@@ -1,188 +1,147 @@
 #include "CodeGenVisitor.h"
+#include <any> // 必须引入此头文件才能使用 std::any_cast
 
-antlrcpp::Any CodeGenVisitor::visitProg(ifccParser::ProgContext *ctx) 
-{
-    std::cout << ".globl main\n";
-    std::cout << "main:\n"; 
-    
-    std::cout << "    pushq %rbp\n";
-    std::cout << "    movq %rsp, %rbp\n";
+CodeGenVisitor::CodeGenVisitor(std::map<antlr4::ParserRuleContext*, int> addressTable, int totalOffset) 
+    : addressTable(addressTable) {
+    cfg = new CFG(totalOffset);
+}
 
-    int tempBuffer = 1024;
-    int alignedStackSize = (totalOffset + tempBuffer + 15) & ~15; 
-    std::cout << "    subq $" << alignedStackSize << ", %rsp\n";
+CodeGenVisitor::~CodeGenVisitor() {
+    delete cfg;
+}
 
-    tempOffset = (totalOffset + 7) & ~7;
+antlrcpp::Any CodeGenVisitor::visitProg(ifccParser::ProgContext *ctx) {
+    BasicBlock* entryBB = new BasicBlock(cfg, ".L_main_entry");
+    cfg->add_bb(entryBB);
+    cfg->current_bb = entryBB;
 
     for (auto stmt : ctx->statement()) {
         this->visit(stmt); 
     }
-
-    std::cout << "end_main:\n"; 
-    std::cout << "    movq %rbp, %rsp\n"; 
-    std::cout << "    popq %rbp\n";
-    std::cout << "    ret\n";
-
     return 0;
 }
 
-antlrcpp::Any CodeGenVisitor::visitReturnStmt(ifccParser::ReturnStmtContext *ctx)
-{
-    this->visit(ctx->expr()); 
-    std::cout << "    jmp end_main\n";
+antlrcpp::Any CodeGenVisitor::visitReturnStmt(ifccParser::ReturnStmtContext *ctx) {
+    // 注意这里改成了 std::any_cast
+    std::string ret_var = std::any_cast<std::string>(this->visit(ctx->expr())); 
+    cfg->current_bb->add_IRInstr(Operation::ret, "", {ret_var});
     return 0;
 }
 
-antlrcpp::Any CodeGenVisitor::visitParExpr(ifccParser::ParExprContext *ctx)
-{
+antlrcpp::Any CodeGenVisitor::visitParExpr(ifccParser::ParExprContext *ctx) {
     return this->visit(ctx->expr());
 }
 
-antlrcpp::Any CodeGenVisitor::visitAddExpr(ifccParser::AddExprContext *ctx) 
-{
-    this->visit(ctx->expr(0)); 
-    this->storeTempReg(); // pushq %rax
-
-    this->visit(ctx->expr(1)); 
-    this->loadTempReg("rdx"); // popq %rdx
+antlrcpp::Any CodeGenVisitor::visitAddExpr(ifccParser::AddExprContext *ctx) {
+    std::string left = std::any_cast<std::string>(this->visit(ctx->expr(0))); 
+    std::string right = std::any_cast<std::string>(this->visit(ctx->expr(1))); 
+    std::string dest = cfg->create_new_tempvar();
 
     if (ctx->OA->getText() == "-") {
-        std::cout << "    negl %eax\n";
+        cfg->current_bb->add_IRInstr(Operation::sub, dest, {left, right});
+    } else {
+        cfg->current_bb->add_IRInstr(Operation::add, dest, {left, right});
     }
-    std::cout << "    addl %edx, %eax\n";
-    return 0;
+    return dest;
 }
 
-antlrcpp::Any CodeGenVisitor::visitMultExpr(ifccParser::MultExprContext *ctx) 
-{
-    this->visit(ctx->expr(0));
-    this->storeTempReg();
+antlrcpp::Any CodeGenVisitor::visitMultExpr(ifccParser::MultExprContext *ctx) {
+    std::string left = std::any_cast<std::string>(this->visit(ctx->expr(0)));
+    std::string right = std::any_cast<std::string>(this->visit(ctx->expr(1)));
+    std::string dest = cfg->create_new_tempvar();
 
-    this->visit(ctx->expr(1));
-    std::cout << "    movl %eax, %ecx\n";
-    
-    this->loadTempReg("rax");
+    std::string op = ctx->OM->getText();
+    if (op == "*") cfg->current_bb->add_IRInstr(Operation::mul, dest, {left, right});
+    else if (op == "/") cfg->current_bb->add_IRInstr(Operation::div, dest, {left, right});
+    else if (op == "%") cfg->current_bb->add_IRInstr(Operation::mod, dest, {left, right});
 
-    if (ctx->OM->getText() == "*") {
-        std::cout << "    imull %ecx, %eax\n"; 
-    } else if (ctx->OM->getText() == "/") {
-        std::cout << "    cltd\n";
-        std::cout << "    idivl %ecx\n";
-    } else if (ctx->OM->getText() == "%") {
-        std::cout << "    cltd\n";
-        std::cout << "    idivl %ecx\n";
-        std::cout << "    movl %edx, %eax\n"; 
-    }
-
-    return 0;
+    return dest;
 }
 
-antlrcpp::Any CodeGenVisitor::visitConstExpr(ifccParser::ConstExprContext *ctx) 
-{
-    int value = std::stoi(ctx->CONST()->getText()); 
-    std::cout << "    movl $" << value << ", %eax" << std::endl; 
-
-    return 0;
+antlrcpp::Any CodeGenVisitor::visitConstExpr(ifccParser::ConstExprContext *ctx) {
+    std::string dest = cfg->create_new_tempvar();
+    std::string val = ctx->CONST()->getText(); 
+    cfg->current_bb->add_IRInstr(Operation::ldconst, dest, {val});
+    return dest;
 }
 
-antlrcpp::Any CodeGenVisitor::visitVarExpr(ifccParser::VarExprContext *ctx) 
-{
+antlrcpp::Any CodeGenVisitor::visitVarExpr(ifccParser::VarExprContext *ctx) {
     int position = addressTable[ctx];
-    std::cout << "    movl " << position << "(%rbp), %eax" << std::endl;
-    return 0;
+    return std::string("!offset_" + std::to_string(position)); // 已静态分配的局部变量
 }
 
 antlrcpp::Any CodeGenVisitor::visitArrayExpr(ifccParser::ArrayExprContext *ctx) {
-    this->visit(ctx->expr()); 
-    std::cout << "    cltq\n"; 
-    int basePosition = addressTable[ctx]; 
-    std::cout << "    movl " << basePosition << "(%rbp, %rax, 4), %eax\n";
-    return 0;
+    std::string index = std::any_cast<std::string>(this->visit(ctx->expr()));
+    std::string dest = cfg->create_new_tempvar();
+    std::string basePosition = std::to_string(addressTable[ctx]);
+    cfg->current_bb->add_IRInstr(Operation::array_load, dest, {basePosition, index});
+    return dest;
 }
 
-antlrcpp::Any CodeGenVisitor::visitDeclaration(ifccParser::DeclarationContext *ctx)
-{
+antlrcpp::Any CodeGenVisitor::visitDeclaration(ifccParser::DeclarationContext *ctx) {
     return 0;
 }
 
 antlrcpp::Any CodeGenVisitor::visitRelationalExpr(ifccParser::RelationalExprContext *ctx) {
-    this->visit(ctx->expr(0));
-    this->storeTempReg();
-    this->visit(ctx->expr(1));
-    std::cout << "    movl %eax, %ecx\n";
-    this->loadTempReg("rax");
-
-    std::cout << "    cmpl %ecx, %eax\n";
+    std::string left = std::any_cast<std::string>(this->visit(ctx->expr(0)));
+    std::string right = std::any_cast<std::string>(this->visit(ctx->expr(1)));
+    std::string dest = cfg->create_new_tempvar();
 
     std::string op = ctx->OR->getText();
-    if (op == "<")  std::cout << "    setl %al\n";
-    else if (op == ">")  std::cout << "    setg %al\n";
-    else if (op == "<=") std::cout << "    setle %al\n";
-    else if (op == ">=") std::cout << "    setge %al\n";
+    if (op == "<")  cfg->current_bb->add_IRInstr(Operation::cmp_lt, dest, {left, right});
+    else if (op == ">")  cfg->current_bb->add_IRInstr(Operation::cmp_gt, dest, {left, right});
+    else if (op == "<=") cfg->current_bb->add_IRInstr(Operation::cmp_le, dest, {left, right});
+    else if (op == ">=") cfg->current_bb->add_IRInstr(Operation::cmp_ge, dest, {left, right});
 
-    std::cout << "    movzbl %al, %eax\n";
-    return 0;
+    return dest;
 }
 
 antlrcpp::Any CodeGenVisitor::visitEqualityExpr(ifccParser::EqualityExprContext *ctx) {
-    this->visit(ctx->expr(0));
-    this->storeTempReg();
-    this->visit(ctx->expr(1));
-    std::cout << "    movl %eax, %ecx\n";
-    this->loadTempReg("rax");
-
-    std::cout << "    cmpl %ecx, %eax\n";
+    std::string left = std::any_cast<std::string>(this->visit(ctx->expr(0)));
+    std::string right = std::any_cast<std::string>(this->visit(ctx->expr(1)));
+    std::string dest = cfg->create_new_tempvar();
 
     std::string op = ctx->OE->getText();
-    if (op == "==") std::cout << "    sete %al\n";
-    else if (op == "!=") std::cout << "    setne %al\n";
+    if (op == "==") cfg->current_bb->add_IRInstr(Operation::cmp_eq, dest, {left, right});
+    else if (op == "!=") cfg->current_bb->add_IRInstr(Operation::cmp_neq, dest, {left, right});
 
-    std::cout << "    movzbl %al, %eax\n";
-    return 0;
+    return dest;
 }
 
 antlrcpp::Any CodeGenVisitor::visitBitwiseAndExpr(ifccParser::BitwiseAndExprContext *ctx) {
-    this->visit(ctx->expr(0));
-    this->storeTempReg();
-    this->visit(ctx->expr(1));
-    std::cout << "    movl %eax, %ecx\n";
-    this->loadTempReg("rax");
-    std::cout << "    andl %ecx, %eax\n";
-    return 0;
+    std::string left = std::any_cast<std::string>(this->visit(ctx->expr(0)));
+    std::string right = std::any_cast<std::string>(this->visit(ctx->expr(1)));
+    std::string dest = cfg->create_new_tempvar();
+    cfg->current_bb->add_IRInstr(Operation::bitwise_and, dest, {left, right});
+    return dest;
 }
 
 antlrcpp::Any CodeGenVisitor::visitBitwiseOrExpr(ifccParser::BitwiseOrExprContext *ctx) {
-    this->visit(ctx->expr(0));
-    this->storeTempReg();
-    this->visit(ctx->expr(1));
-    std::cout << "    movl %eax, %ecx\n";
-    this->loadTempReg("rax");
-    std::cout << "    orl %ecx, %eax\n";
-    return 0;
+    std::string left = std::any_cast<std::string>(this->visit(ctx->expr(0)));
+    std::string right = std::any_cast<std::string>(this->visit(ctx->expr(1)));
+    std::string dest = cfg->create_new_tempvar();
+    cfg->current_bb->add_IRInstr(Operation::bitwise_or, dest, {left, right});
+    return dest;
 }
 
 antlrcpp::Any CodeGenVisitor::visitBitwiseXorExpr(ifccParser::BitwiseXorExprContext *ctx) {
-    this->visit(ctx->expr(0));
-    this->storeTempReg();
-    this->visit(ctx->expr(1));
-    std::cout << "    movl %eax, %ecx\n";
-    this->loadTempReg("rax");
-    std::cout << "    xorl %ecx, %eax\n";
-    return 0;
+    std::string left = std::any_cast<std::string>(this->visit(ctx->expr(0)));
+    std::string right = std::any_cast<std::string>(this->visit(ctx->expr(1)));
+    std::string dest = cfg->create_new_tempvar();
+    cfg->current_bb->add_IRInstr(Operation::bitwise_xor, dest, {left, right});
+    return dest;
 }
 
 antlrcpp::Any CodeGenVisitor::visitShiftExpr(ifccParser::ShiftExprContext *ctx) {
-    this->visit(ctx->expr(0));
-    this->storeTempReg();
-    this->visit(ctx->expr(1));
-    std::cout << "    movl %eax, %ecx\n";
-    this->loadTempReg("rax");
+    std::string left = std::any_cast<std::string>(this->visit(ctx->expr(0)));
+    std::string right = std::any_cast<std::string>(this->visit(ctx->expr(1)));
+    std::string dest = cfg->create_new_tempvar();
 
     std::string op = ctx->OS->getText();
-    if (op == "<<") std::cout << "    sall %cl, %eax\n";
-    else if (op == ">>") std::cout << "    sar %cl, %eax\n";
+    if (op == "<<") cfg->current_bb->add_IRInstr(Operation::lshift, dest, {left, right});
+    else if (op == ">>") cfg->current_bb->add_IRInstr(Operation::rshift, dest, {left, right});
 
-    return 0;
+    return dest;
 }
 
 antlrcpp::Any CodeGenVisitor::visitBlocStmt(ifccParser::BlocStmtContext *ctx) {
@@ -193,109 +152,127 @@ antlrcpp::Any CodeGenVisitor::visitBlocStmt(ifccParser::BlocStmtContext *ctx) {
 }
 
 antlrcpp::Any CodeGenVisitor::visitIfStmt(ifccParser::IfStmtContext *ctx) {
-    int id = labelCounter++; 
-    std::string elseLabel = "else_" + std::to_string(id);
-    std::string endLabel = "end_if_" + std::to_string(id);
-
-    this->visit(ctx->expr());
+    std::string cond = std::any_cast<std::string>(this->visit(ctx->expr()));
     
-    std::cout << "    cmpl $0, %eax\n";
-    
-    if (ctx->elseStmt) {
-        std::cout << "    je " << elseLabel << "\n";
-    } else {
-        std::cout << "    je " << endLabel << "\n";
-    }
+    BasicBlock* thenBB = new BasicBlock(cfg, cfg->get_next_label());
+    BasicBlock* endBB = new BasicBlock(cfg, cfg->get_next_label());
+    BasicBlock* elseBB = ctx->elseStmt ? new BasicBlock(cfg, cfg->get_next_label()) : endBB;
 
+    cfg->current_bb->add_IRInstr(Operation::jmp_if_zero, "", {cond, elseBB->label});
+    cfg->current_bb->add_IRInstr(Operation::jmp, "", {thenBB->label});
+
+    cfg->add_bb(thenBB);
+    cfg->current_bb = thenBB;
     this->visit(ctx->thenStmt);
-    std::cout << "    jmp " << endLabel << "\n";
+    cfg->current_bb->add_IRInstr(Operation::jmp, "", {endBB->label});
 
     if (ctx->elseStmt) {
-        std::cout << elseLabel << ":\n";
+        cfg->add_bb(elseBB);
+        cfg->current_bb = elseBB;
         this->visit(ctx->elseStmt);
+        cfg->current_bb->add_IRInstr(Operation::jmp, "", {endBB->label});
     }
 
-    std::cout << endLabel << ":\n";
+    cfg->add_bb(endBB);
+    cfg->current_bb = endBB;
+
     return 0;
 }
 
 antlrcpp::Any CodeGenVisitor::visitUnaryExpr(ifccParser::UnaryExprContext *ctx) {
-    this->visit(ctx->expr());
+    std::string src = std::any_cast<std::string>(this->visit(ctx->expr()));
+    std::string dest = cfg->create_new_tempvar();
 
     std::string op = ctx->OU->getText();
-    if (op == "-") {
-        std::cout << "    negl %eax\n";
-    } else if (op == "~") {
-        std::cout << "    notl %eax\n";
-    } else if (op == "!") {
-        std::cout << "    cmpl $0, %eax\n";
-        std::cout << "    sete %al\n";
-        std::cout << "    movzbl %al, %eax\n";
-    }
+    if (op == "-") cfg->current_bb->add_IRInstr(Operation::neg, dest, {src});
+    else if (op == "~") cfg->current_bb->add_IRInstr(Operation::bitwise_not, dest, {src});
+    else if (op == "!") cfg->current_bb->add_IRInstr(Operation::logical_not, dest, {src});
 
-    return 0;
+    return dest;
 }
 
+// 采用惰性求值策略模拟 &&
 antlrcpp::Any CodeGenVisitor::visitLogicalAndExpr(ifccParser::LogicalAndExprContext *ctx) {
-    int id = labelCounter++;
-    std::string falseLabel = "logical_and_false_" + std::to_string(id);
-    std::string endLabel = "logical_and_end_" + std::to_string(id);
+    std::string dest = cfg->create_new_tempvar();
+    
+    BasicBlock* evalRightBB = new BasicBlock(cfg, cfg->get_next_label());
+    BasicBlock* setTrueBB = new BasicBlock(cfg, cfg->get_next_label());
+    BasicBlock* setFalseBB = new BasicBlock(cfg, cfg->get_next_label());
+    BasicBlock* endBB = new BasicBlock(cfg, cfg->get_next_label());
 
-    this->visit(ctx->expr(0));
-    std::cout << "    testl %eax, %eax\n";
-    std::cout << "    je " << falseLabel << "\n";
+    std::string left = std::any_cast<std::string>(this->visit(ctx->expr(0)));
+    cfg->current_bb->add_IRInstr(Operation::jmp_if_zero, "", {left, setFalseBB->label});
+    cfg->current_bb->add_IRInstr(Operation::jmp, "", {evalRightBB->label});
+    
+    cfg->add_bb(evalRightBB);
+    cfg->current_bb = evalRightBB;
+    std::string right = std::any_cast<std::string>(this->visit(ctx->expr(1)));
+    cfg->current_bb->add_IRInstr(Operation::jmp_if_zero, "", {right, setFalseBB->label});
+    cfg->current_bb->add_IRInstr(Operation::jmp, "", {setTrueBB->label});
 
-    // true+
-    this->visit(ctx->expr(1));
-    std::cout << "    testl %eax, %eax\n";
-    std::cout << "    je " << falseLabel << "\n";
+    cfg->add_bb(setTrueBB);
+    cfg->current_bb = setTrueBB;
+    cfg->current_bb->add_IRInstr(Operation::ldconst, dest, {"1"});
+    cfg->current_bb->add_IRInstr(Operation::jmp, "", {endBB->label});
 
-    // true*2
-    std::cout << "    movl $1, %eax\n";
-    std::cout << "    jmp " << endLabel << "\n";
+    cfg->add_bb(setFalseBB);
+    cfg->current_bb = setFalseBB;
+    cfg->current_bb->add_IRInstr(Operation::ldconst, dest, {"0"});
+    cfg->current_bb->add_IRInstr(Operation::jmp, "", {endBB->label});
 
-    // 1 false
-    std::cout << falseLabel << ":\n";
-    std::cout << "    movl $0, %eax\n";
+    cfg->add_bb(endBB);
+    cfg->current_bb = endBB;
 
-    std::cout << endLabel << ":\n";
-    return 0;
+    return dest;
 }
 
+// 采用惰性求值策略模拟 ||
 antlrcpp::Any CodeGenVisitor::visitLogicalOrExpr(ifccParser::LogicalOrExprContext *ctx) {
-    int id = labelCounter++;
-    std::string trueLabel = "logical_or_true_" + std::to_string(id);
-    std::string endLabel = "logical_or_end_" + std::to_string(id);
+    std::string dest = cfg->create_new_tempvar();
+    
+    BasicBlock* evalRightBB = new BasicBlock(cfg, cfg->get_next_label());
+    BasicBlock* setTrueBB = new BasicBlock(cfg, cfg->get_next_label());
+    BasicBlock* setFalseBB = new BasicBlock(cfg, cfg->get_next_label());
+    BasicBlock* endBB = new BasicBlock(cfg, cfg->get_next_label());
 
-    this->visit(ctx->expr(0));
-    std::cout << "    testl %eax, %eax\n";
-    std::cout << "    jne " << trueLabel << "\n";
-    this->visit(ctx->expr(1));
-    std::cout << "    testl %eax, %eax\n";
-    std::cout << "    jne " << trueLabel << "\n";
-    std::cout << "    movl $0, %eax\n";
-    std::cout << "    jmp " << endLabel << "\n";
-    std::cout << trueLabel << ":\n";
-    std::cout << "    movl $1, %eax\n";
-    std::cout << endLabel << ":\n";
-    return 0;
+    std::string left = std::any_cast<std::string>(this->visit(ctx->expr(0)));
+    cfg->current_bb->add_IRInstr(Operation::jmp_if_not_zero, "", {left, setTrueBB->label});
+    cfg->current_bb->add_IRInstr(Operation::jmp, "", {evalRightBB->label});
+    
+    cfg->add_bb(evalRightBB);
+    cfg->current_bb = evalRightBB;
+    std::string right = std::any_cast<std::string>(this->visit(ctx->expr(1)));
+    cfg->current_bb->add_IRInstr(Operation::jmp_if_not_zero, "", {right, setTrueBB->label});
+    cfg->current_bb->add_IRInstr(Operation::jmp, "", {setFalseBB->label});
+
+    cfg->add_bb(setTrueBB);
+    cfg->current_bb = setTrueBB;
+    cfg->current_bb->add_IRInstr(Operation::ldconst, dest, {"1"});
+    cfg->current_bb->add_IRInstr(Operation::jmp, "", {endBB->label});
+
+    cfg->add_bb(setFalseBB);
+    cfg->current_bb = setFalseBB;
+    cfg->current_bb->add_IRInstr(Operation::ldconst, dest, {"0"});
+    cfg->current_bb->add_IRInstr(Operation::jmp, "", {endBB->label});
+
+    cfg->add_bb(endBB);
+    cfg->current_bb = endBB;
+
+    return dest;
 }
 
 antlrcpp::Any CodeGenVisitor::visitVarAssignment(ifccParser::VarAssignmentContext *ctx) {
-    this->visit(ctx->expr()); 
+    std::string right = std::any_cast<std::string>(this->visit(ctx->expr())); 
     int position = addressTable[ctx];
-    std::cout << "    movl %eax, " << position << "(%rbp)\n";
-    return 0;
+    std::string left = "!offset_" + std::to_string(position);
+    cfg->current_bb->add_IRInstr(Operation::copy, left, {right});
+    return left;
 }
 
 antlrcpp::Any CodeGenVisitor::visitArrayAssignment(ifccParser::ArrayAssignmentContext *ctx) {
-    this->visit(ctx->expr(0)); 
-    std::cout << "    cltq\n"; 
-    this->storeTempReg();
-    int basePosition = addressTable[ctx]; 
-    this->visit(ctx->expr(1)); 
-    std::cout << "    movl %eax, %ecx\n"; 
-    this->loadTempReg("rax"); 
-    std::cout << "    movl %ecx, " << basePosition << "(%rbp, %rax, 4)\n";
-    return 0;
+    std::string index = std::any_cast<std::string>(this->visit(ctx->expr(0)));
+    std::string val = std::any_cast<std::string>(this->visit(ctx->expr(1)));
+    std::string basePosition = std::to_string(addressTable[ctx]);
+    cfg->current_bb->add_IRInstr(Operation::array_store, "", {basePosition, index, val});
+    return val;
 }

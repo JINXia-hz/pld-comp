@@ -165,4 +165,4 @@ build/main.o: main.cpp /usr/local/include/antlr4-runtime/antlr4-runtime.h \
  /usr/local/include/antlr4-runtime/tree/xpath/XPathWildcardAnywhereElement.h \
  /usr/local/include/antlr4-runtime/tree/xpath/XPathWildcardElement.h \
  generated/ifccLexer.h generated/ifccParser.h generated/ifccBaseVisitor.h \
- generated/ifccVisitor.h CodeGenVisitor.h StaticVisitor.h
+ generated/ifccVisitor.h CodeGenVisitor.h IR.h StaticVisitor.h
