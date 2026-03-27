@@ -1,9 +1,10 @@
-# compilo version 2
+# compilo version 3
 #*Auteur:JIN Xia*
 **existing functions:**
 - op '!'|'~'|'-', '*'|'/'|'%', '+'|'-', '<<'|'>>', '<'|'>'|'<='|'>=', '=='|'!=','&' |'^'|'|'|'&&'|'||'
 - array (def and use)
 - if-else
 - scope
-
-*use testfiles/9_complet_op.c to use them all*
+- while
+- function
+*use testfiles/10_function.c to use them all*
